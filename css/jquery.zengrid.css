@@ -1,0 +1,48 @@
+
+.gridContent {
+margin:0;
+padding:0;
+height: 120px;
+overflow:auto;
+border:1px solid skyblue;
+}
+
+.grid{
+width:100%;
+}
+
+.header, .grid{
+border-spacing:0px;
+border-collapse:none;
+margin:0;
+padding:0;
+
+width:100%;
+background:#fff;
+}
+
+.header {
+background:#E7F2FB;
+}
+
+.header th, .grid td{
+margin:0px;
+padding:0px;
+padding:0px;
+padding-left:6px;
+border:1px solid skyblue;
+}
+
+.grid td, .header th {
+  padding-top:5px;
+  padding-bottom:5px;
+}
+
+
+.title-bar{
+background:skyblue;
+border-radius: 5px 5px 0px 0px;
+padding: 2px;
+}
+
+  

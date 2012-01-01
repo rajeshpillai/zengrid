@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script class="jsbin" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src = "js/jquery.zengrid.js"></script>
+<meta charset=utf-8 />
+<title>jQuery Zen UI Suite</title>
+<!--[if IE]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<style>
+  article, aside, figure, footer, header, hgroup, 
+  menu, nav, section { display: block; }
+  
+  .gridContent {
+    margin:0;
+    padding:0;
+    height: 120px;
+    overflow:auto;
+    border:1px solid skyblue;
+  }
+  
+  .grid{
+    width:100%;
+  }
+  
+  .header, .grid{
+    border-spacing:0px;
+    border-collapse:none;
+    margin:0;
+    padding:0;
+  
+    width:100%;
+    background:#fff;
+  }
+  
+  .header {
+    background:#E7F2FB;
+  }
+  
+  .header th, .grid td{
+    margin:0px;
+    padding:0px;
+    padding:0px;
+    padding-left:6px;
+    border:1px solid skyblue;
+  }
+ 
+  .grid td, .header th {
+      padding-top:5px;
+      padding-bottom:5px;
+  }
+  
+
+	.title-bar{
+	background:skyblue;
+	border-radius: 5px 5px 0px 0px;
+	padding: 2px;
+	}
+
+</style>
+</head>
+<body>
+  <div id = "debug"></div>
+  <table class="grid">
+      <thead>
+          <tr>
+            <th data-width="50px">Order</th>
+            <th>Name</th>
+            <th>Age</th>
+        </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>ABC</td>
+        <td>35</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>CDE</td>
+        <td>35</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>FGH</td>
+        <td>35</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>IGJ</td>
+        <td>35</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>LMN</td>
+        <td>35</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>OPQ</td>
+        <td>35</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>RST</td>
+        <td>35</td>
+      </tr>
+      
+    </tbody>
+  </table>
+</body>
+</html>

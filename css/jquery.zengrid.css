@@ -1,5 +1,4 @@
-  
-  .gridContent {
+ .gridContent {
     margin:0;
     padding:0;
     height: 120px;
@@ -41,6 +40,8 @@
       padding-right:0px;
   }
   
+  
+
   .title-bar{
     background:skyblue;
     border-radius: 5px 5px 0px 0px;
@@ -65,8 +66,26 @@
     background:transparent;
     cursor:e-resize;
 }
+  
+  
   .search-bar{
     padding:0;
     margin:0;
     background:lightblue;
+  }
+  
+  .pager-bar{
+    background:lightblue;
+    height:30px;
+    border:1px solid skyblue;
+    line-height:30px;
+    
+  }
+  
+  .prev{
+    margin-left:10px;
+  }
+  
+  .next {
+    margin-left:10px;
   }

@@ -1,3 +1,4 @@
+
 /*!
  * zengrid (jquery plugin) v0.2
  * http://tekacademy.com
@@ -21,7 +22,14 @@ $(function() {
     
   $.fn.search = function (inputVal)
   {
+    
       var table = $(this);
+   
+    if ($.trim(inputVal) === '') {
+        table.loadPage(1);
+        return;
+      }
+    
       table.find('tr').each(function(index, row)
       {
           console.log(index);
@@ -38,7 +46,7 @@ $(function() {
                       return false;
                   }
               });
-              if(found == true)$(row).show();else $(row).hide();
+              if(found === true)$(row).show();else $(row).hide();
           }
       });
   };
@@ -56,6 +64,7 @@ $(function() {
     return this.each(function(){
       
       var $grid = $(this);
+      
       $grid.addClass("grid");
       
       if($grid.parents(".gridContainer").length) {
@@ -102,14 +111,14 @@ $(function() {
         if (settings.resizeColumns) {
           $colHandle.mousedown(function(e) {
               var startX = e.clientX;
-              $(document).bind("mousemove.grid", function(e) {
+              $(document).bind("mousemove.zengrid", function(e) {
                  $th.width($th.width() + (e.clientX - startX)); 
                  startX = e.clientX;
                  $grid.equalize();
                 
               });
               $(document).mouseup(function(e) {
-                $(document).unbind("mousemove.grid");
+                $(document).unbind("mousemove.zengrid");
               });
           });
         }
@@ -138,10 +147,72 @@ $(function() {
                $grid.search($(this).val());
           });
       }
+      
+      $grid.pager();
+      
+      $grid.loadPage(1);
+      
     });
   };
 
-  $.fn.setColumnResizable = function() {
+  $.fn.pager = function() {
+    // Add pager
+    var $grid = $(this);
+    var $gridContainer = $grid.closest(".gridContainer");
+    
+    $grid.data("page",1);
+    $grid.data("pageSize",2);
+    $grid.data("totalRows", $grid.find("tr").length);
+    $grid.data("totalPages", $grid.data().totalRows / $grid.data().pageSize);
+    $gridContainer.append("<div class='pager-bar'/>");
+    
+    $(".pager-bar",$gridContainer).append("<a class='prev' href='#'>Prev</a>");
+    $(".pager-bar",$gridContainer).append("<a class='next' href='#'>Next</a>");
+    
+    $("a.prev", $gridContainer).click(function(e) {
+      var page = $grid.data("page");
+      
+      if (page !== 'undefined' && page > 1) {
+        page = page - 1;
+        $grid.data("page", page);
+      }
+      else {
+        $grid.data("page", 1);
+      }
+      
+      $grid.loadPage(page);
+    });
+    
+    $("a.next", $gridContainer).click(function(e) {
+      var page = $grid.data("page");
+      var totalPages = $grid.data().totalPages;
+      if (page !== undefined && page < totalPages) {
+        page = page + 1;
+        $grid.data("page", page);
+      }
+      else {
+        $grid.data("page", page);
+      }
+      $grid.loadPage(page);
+    });
+  };
+  
+ 
+  $.fn.loadPage = function(page) {
+    var $grid = $(this);
+    var totalRows = $grid.data().totalRows;
+    var pageSize = $grid.data().pageSize;
+    var rows = $grid.find("tr");
+    
+    var startNum = (page-1) * pageSize;
+    
+    for(var i = 0; i < rows.length; i++) {
+      $(rows[i]).hide();
+    }
+    
+    for(var j = startNum; j < startNum + pageSize; j++){
+       $(rows[j]).show();
+    }
     
   };
   

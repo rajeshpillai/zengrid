@@ -1,4 +1,6 @@
 
+// Base: V0.1
+
 /*!
  * zengrid (jquery plugin) v0.2
  * http://tekacademy.com
@@ -32,7 +34,6 @@ $(function() {
     
       table.find('tr').each(function(index, row)
       {
-          console.log(index);
           var allCells = $(row).find('td');
           if(allCells.length > 0)
           {
@@ -54,9 +55,11 @@ $(function() {
   $.fn.zenGrid = function(options) {
     var settings = $.extend( {
       width : '100%',
-      height : '120px',
+      height : '100%',
       resizeColumns: true,
-      showSearch: true
+      showSearch: true,
+      pager: false,
+      pagerLocation: "bottom"
     }, options);
     
     
@@ -91,12 +94,37 @@ $(function() {
       // wrap the main grid in its own container.
       $grid.wrap("<div class='gridContent'/>");
       
+      
+      // extend your new options with the saved ones
+      if($grid.data().page) {
+              $.extend($grid.data(),options);
+
+      // if there are no saved options - use the default
+      } else {
+              $.each(settings,function(property,value) {
+                      // if we have a callback function, we can't store it in data
+                      // it will get executed right away
+                      if(typeof(value) != "function") {
+                              //$.data($grid,property,value);
+                              $grid.data(property,value);
+                      } else {
+                              // create pluginlett of custom callback
+                              $.fn[property] = value;
+                              //$.data($grid,property,true);
+                              $grid.data(property,true);
+                      }
+              });
+      }
+      
+      
       // set container width
       $grid.parent(".gridContainer").height(settings.height);
       $grid.parent(".gridContent").height(settings.height);
       
       var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
       var $gridContainer = $grid.closest(".gridContainer");
+      
+      
       
       // wrap each th text in div
       $gridHeader.find("th").each(function(i) {
@@ -112,9 +140,11 @@ $(function() {
           $colHandle.mousedown(function(e) {
               var startX = e.clientX;
               $(document).bind("mousemove.zengrid", function(e) {
-                 $th.width($th.width() + (e.clientX - startX)); 
-                 startX = e.clientX;
-                 $grid.equalize();
+                
+                $th.width($th.width() + (e.clientX - startX)); 
+                startX = e.clientX;
+                $grid.equalize();
+                
                 
               });
               $(document).mouseup(function(e) {
@@ -122,7 +152,13 @@ $(function() {
               });
           });
         }
+        // set the th to auto
+        $th.width("auto");
+        
+        // add the resizer
         $th.append($colResizer);
+        
+       
         
       });
       
@@ -148,26 +184,36 @@ $(function() {
           });
       }
       
-      $grid.pager();
-      
-      $grid.loadPage(1);
-      
+      if ($grid.data().pager) {
+        $grid.pager();
+        $grid.loadPage(1);
+      }
     });
   };
 
   $.fn.pager = function() {
     // Add pager
     var $grid = $(this);
+ 
     var $gridContainer = $grid.closest(".gridContainer");
     
     $grid.data("page",1);
     $grid.data("pageSize",2);
     $grid.data("totalRows", $grid.find("tr").length);
     $grid.data("totalPages", $grid.data().totalRows / $grid.data().pageSize);
-    $gridContainer.append("<div class='pager-bar'/>");
     
-    $(".pager-bar",$gridContainer).append("<a class='prev' href='#'>Prev</a>");
-    $(".pager-bar",$gridContainer).append("<a class='next' href='#'>Next</a>");
+    
+    if ($grid.data().pagerLocation === 'top') {
+      $gridContainer.find(".title-bar").after("<div class='pager-bar'/>");
+      $(".pager-bar",$gridContainer).prepend("<a class='next' href='#'>Next</a>");
+      $(".pager-bar",$gridContainer).prepend("<a class='prev' href='#'>Prev</a>");
+      
+    }
+    else {
+      $gridContainer.append("<div class='pager-bar'/>");
+      $(".pager-bar",$gridContainer).append("<a class='prev' href='#'>Prev</a>");
+      $(".pager-bar",$gridContainer).append("<a class='next' href='#'>Next</a>");
+    }
     
     $("a.prev", $gridContainer).click(function(e) {
       var page = $grid.data("page");
@@ -179,7 +225,6 @@ $(function() {
       else {
         $grid.data("page", 1);
       }
-      
       $grid.loadPage(page);
     });
     
@@ -199,7 +244,15 @@ $(function() {
   
  
   $.fn.loadPage = function(page) {
+    
     var $grid = $(this);
+    
+    if (page === 'undefined') {
+        $("#debug").append("..no paging");
+  
+      return;
+    }
+    
     var totalRows = $grid.data().totalRows;
     var pageSize = $grid.data().pageSize;
     var rows = $grid.find("tr");
@@ -214,16 +267,19 @@ $(function() {
        $(rows[j]).show();
     }
     
+    $grid.equalize();
   };
   
   $.fn.equalize = function() {
    
-    var $firstRow = $(this).first("tr");
+    var $firstRow = $(this).find("tr:first");
     var $gridHeader = $(this).closest(".gridContainer").find(".header"); 
     var $gridBody = $(this);
     
     // if there is a scrollbar account for it
+  
     if(($gridBody.height() > $gridBody.parents(".gridContent").height())) {
+        
         $gridHeader.find(".scroll").remove();
         var $newTh = $("<th></th>").addClass("scroll").css({
                 padding:0,
@@ -232,9 +288,9 @@ $(function() {
         });
         $gridHeader.find("tr:first").append($newTh);
     } 
-    else if ($gridBody.parents(".gridWrapper").height() > $gridBody.height()) 
+    else if ($gridBody.parents(".gridContainer").height() > $gridBody.height()) 
     {
-        $(".scroll").remove();
+        $(".scroll", $gridHeader).remove();
     }
     
     // set header width based on user configuration in the html
@@ -247,9 +303,13 @@ $(function() {
     });
     
     // Size the body row width to header row
-    $gridBody.find("tr:first td:visible").each(function(i) {
-      
-       $(this).width($gridHeader.find("th").eq(i).width());
+    //console.log("Before resizing..");
+    //console.log($gridBody.find("tr:first"));
+    $gridBody.find("td:visible").each(function(i) {
+      //console.log("--->Resizing : " + i);
+       var w =$gridHeader.find("th").eq(i).width();
+       $(this).width(w);
+       $(this).css({ width: w });
     });
   };
 });
@@ -259,7 +319,9 @@ $(function() {
     {
       width: "300px",
       height: "120px",
-      caption: "Zen Grid"
+      caption: "Zen Grid",
+      pager: true,
+      pagerLocation: 'bottom'
     }
   );
   
@@ -268,7 +330,7 @@ $(function() {
       width: "300px",
       height: "120px",
       caption: "Zen Grid",
-      resizeColumns: false,
+      resizeColumns: true,
       showSearch: false
     }
   );

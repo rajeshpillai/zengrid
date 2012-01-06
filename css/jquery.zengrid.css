@@ -1,4 +1,6 @@
-.gridContainer{
+ 
+  .gridContainer{
+  font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; font-size: 1em;
     padding:0px;
     margin:0px;
   }
@@ -6,8 +8,9 @@
   .gridHeader  {
     margin:0px;
     padding: 0px;
-    border: 1px solid #4297D7;
-    background: #5C9CCC ;
+    border: 1px solid skyblue;
+    background: #E7F2FB ;
+    
   }
   
   .gridContent {
@@ -23,32 +26,22 @@
     width:100%;
   }
   
-  .header {
-    border-collapse:collapse;
-  }
-  
   
   .header, .grid{
     border-spacing:0px;
     border-collapse:none;
     margin:0;
     padding:0;
-  
     width:100%;
-    background:#fff;
     
   }
   
   .header {
-    background:#E7F2FB;
   }
   
   .header th, .grid td{
     margin:0px;
     padding:0px;
-    padding:0px;
-    padding-left:0px;
-    
     
   }
   
@@ -63,26 +56,65 @@
       padding-right:0px;
   }
   
+  
   .header th{
+    border-right:1px solid skyblue;
+    border-top:1px none;
+    /*border-bottom: 1px solid skyblue;*/
+  }
+  
+  .header th:last-child {
+    border: 0px none;
+  }
+  
+  .grid td {
+    
+    overflow:hidden;
+    /*border-left: 1px solid skyblue;*/
     border-right:1px solid skyblue;
     border-bottom: 1px solid skyblue;
   }
   
-  .grid td {
-    display:table-cell;
-    overflow:hidden;
-    border-right:1px solid skyblue;
-    border-bottom: 1px solid skyblue;
+  /* provide JS fallback */
+  .grid td:last-child {
+    border-right:0px none;
+  }
+  
+  .grid tr:hover{
+    background: lightblue;
   }
 
+ 
+  
   .title-bar{
     background:skyblue;
     border-radius: 5px 5px 0px 0px;
     padding: 2px;
+    background-image: linear-gradient(bottom, #AAD2E0 29%, #A5C0ED 65%);
+background-image: -o-linear-gradient(bottom, #AAD2E0 29%, #A5C0ED 65%);
+background-image: -moz-linear-gradient(bottom, #AAD2E0 29%, #A5C0ED 65%);
+background-image: -webkit-linear-gradient(bottom, #AAD2E0 29%, #A5C0ED 65%);
+background-image: -ms-linear-gradient(bottom, #AAD2E0 29%, #A5C0ED 65%);
+
+background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.29, #AAD2E0),
+	color-stop(0.65, #A5C0ED)
+);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5); 
+    border-bottom: 1px solid #979797; 
   }
- 
+
+  
+
+
+  
   /* the div inside of each th that will chagne size */
 .col-resizer {
+    margin:0;
+    padding:0;
     background-color:transparent;
     position:relative;
     height:inherit;
@@ -91,6 +123,8 @@
 }
 /* the handle on each th that will grab to resize */
 .col-handle {
+    margin:0;
+    padding:0;
     height:100%;
     width:20px;
     background-color:transparent;
@@ -117,10 +151,43 @@
     
   }
   
+  .pager-status {
+    margin-left:4px;
+    background: skyblue;
+    padding:2px;
+    border-radius:4px;
+    border:1px outset skyblue;
+  }
+  
+  .pager-input {
+    width:40px;
+    height: 1.4em;
+    margin:0;
+    padding:0;
+    
+  }
+  
+  .prev, .next{
+    background: #f0f0fc;
+    border-radius:5px;
+  }
+  
   .prev{
-    margin-left:10px;
+    margin-left:5px;
   }
   
   .next {
-    margin-left:10px;
+    margin-left:5px;
+  }
+  
+  a.next,  a.prev {
+    border:1px outset skyblue;
+    padding:2px;
+    text-decoration:none;
+    font-size:0.9em;
+  }
+  
+  a.next:hover,  a.prev:hover {
+    text-decoration:none;
+    background:#b8b6f2;
   }

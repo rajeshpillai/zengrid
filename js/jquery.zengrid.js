@@ -12,6 +12,8 @@
  * Date: Mon Jan 01 14:40 2012
  */
 
+// AJAX TEST URL : http://jsbin.com/zengrid-data/js
+// jQuery UI CSS URL: http://jsbin.com/rajesh-css-aristoui/js
 
 $(function() {
   var $debug = $("#debug");
@@ -59,7 +61,9 @@ $(function() {
       resizeColumns: true,
       showSearch: true,
       pager: false,
-      pagerLocation: "bottom"
+      pagerLocation: "bottom",
+      pageSize: 3,
+      showRowNo: false   // todo
     }, options);
     
     
@@ -118,13 +122,33 @@ $(function() {
       
       
       // set container width
-      $grid.parent(".gridContainer").height(settings.height);
-      $grid.parent(".gridContent").height(settings.height);
+      $grid.parent(".gridContainer").height($grid.data().height);
+      $grid.parent(".gridContent").height($grid.data().height);
       
+      $grid.parent(".gridContainer").width($grid.data().width);
+      
+      
+      // add column resizer
+      $grid.addColResizer();
+      
+      
+      // equalize the columns
+      $grid.equalize();
+      
+      $grid.addTitle();
+
+      $grid.addSearch();
+      
+      $grid.addPager();
+      
+      
+    });
+  };
+
+  $.fn.addColResizer = function() {
+      var $grid = $(this);
       var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
       var $gridContainer = $grid.closest(".gridContainer");
-      
-      
       
       // wrap each th text in div
       $gridHeader.find("th").each(function(i) {
@@ -136,16 +160,18 @@ $(function() {
         var $colHandle = $("<div class='col-handle'></div>");
         $colHandle.height($th.outerHeight());
         var $colResizer = $("<div class='col-resizer'></div>").html(text).append($colHandle);
-        if (settings.resizeColumns) {
+        if ($grid.data().resizeColumns) {
           $colHandle.mousedown(function(e) {
               var startX = e.clientX;
               $(document).bind("mousemove.zengrid", function(e) {
                 
-                $th.width($th.width() + (e.clientX - startX)); 
-                startX = e.clientX;
+                var newWidth = $th.width() + (e.clientX - startX);
+                $th.width(newWidth); 
+                $th.css ({ "width" : newWidth});
                 $grid.equalize();
+                startX = e.clientX;
                 
-                
+              
               });
               $(document).mouseup(function(e) {
                 $(document).unbind("mousemove.zengrid");
@@ -153,67 +179,93 @@ $(function() {
           });
         }
         // set the th to auto
-        $th.width("auto");
+        //$th.width("auto");
         
         // add the resizer
         $th.append($colResizer);
         
+        $colResizer.width("100%");
+        $colResizer.height("100%");
        
         
       });
       
-      
-      // equalize the columns
-      $grid.equalize();
-      
-      // Add the title bar
-      $gridContainer.prepend("<div class='title-bar'/>");
-      
-      var title = settings.caption;
-      
-      if ($grid.attr("title")) {
-            title = $grid.attr("title");
-      }
-      $(".title-bar", $gridContainer).text(title);
-      
-      // add search bar
-      if (settings.showSearch) {
-        $gridContainer.children(":first").append("<div class='search-bar'>Search:<input type='text' class='search-input' /></div>");
-           $('input.search-input').keyup(function() {
-               $grid.search($(this).val());
-          });
-      }
-      
-      if ($grid.data().pager) {
-        $grid.pager();
-        $grid.loadPage(1);
-      }
-    });
   };
+  
+  $.fn.addSearch = function() {
+    
+    var $grid = $(this);
+    var $gridContainer = $grid.closest(".gridContainer");
 
-  $.fn.pager = function() {
+  
+    // add search bar
+    if ($grid.data().showSearch) {
+      $gridContainer.children(":first").append("<div class='search-bar'>Search:<input type='text' class='search-input' /></div>");
+         $('input.search-input').keyup(function() {
+             $grid.search($(this).val());
+        });
+    }
+    
+  };
+  
+  $.fn.addTitle = function() {
+    var $grid = $(this);
+    var $gridContainer = $grid.closest(".gridContainer");
+    
+    $gridContainer.prepend("<div class='title-bar'/>");
+      
+    var title = $grid.data().caption;
+    
+    if ($grid.attr("title")) {
+          title = $grid.attr("title");
+    }
+    $(".title-bar", $gridContainer).append("<span>" + title + "</span>");
+  };
+  
+  $.fn.addPager = function() {
     // Add pager
     var $grid = $(this);
  
     var $gridContainer = $grid.closest(".gridContainer");
     
+    if (!$grid.data().pager) {
+        return;
+    }
+    
     $grid.data("page",1);
-    $grid.data("pageSize",2);
     $grid.data("totalRows", $grid.find("tr").length);
     $grid.data("totalPages", $grid.data().totalRows / $grid.data().pageSize);
     
+    var $pagerBar = null;
     
     if ($grid.data().pagerLocation === 'top') {
       $gridContainer.find(".title-bar").after("<div class='pager-bar'/>");
-      $(".pager-bar",$gridContainer).prepend("<a class='next' href='#'>Next</a>");
-      $(".pager-bar",$gridContainer).prepend("<a class='prev' href='#'>Prev</a>");
+      $pagerBar = $(".pager-bar", $gridContainer);
+      $pagerBar.prepend("<a class='next' href='#'>Next</a>");
+      $pagerBar.prepend("<a class='prev' href='#'>Prev</a>");
+      
+      $pagerBar.append("<span class='pager-status'>Page 1 of 3</span>");
       
     }
     else {
       $gridContainer.append("<div class='pager-bar'/>");
-      $(".pager-bar",$gridContainer).append("<a class='prev' href='#'>Prev</a>");
-      $(".pager-bar",$gridContainer).append("<a class='next' href='#'>Next</a>");
+      $pagerBar = $(".pager-bar", $gridContainer);
+      
+      $pagerBar.append("<a class='prev' href='#'>Prev</a>");
+      $pagerBar.append("<a class='next' href='#'>Next</a>");
+      $pagerBar.append("<span class='pager-status'>Page 1 of 3</span>");
+      
     }
+    $(".pager-status", $pagerBar).html("Page <input type='text' value='1' class='pager-input'/> of " + Math.ceil($grid.data().totalPages));
+    
+    var $pagerInput = $(".pager-input", $pagerBar);
+    $pagerInput.keypress(function(e) {
+          var keyCode = e.which;
+      if (keyCode === 13) {
+          $grid.loadPage($(this).val());
+      }
+     });
+    
     
     $("a.prev", $gridContainer).click(function(e) {
       var page = $grid.data("page");
@@ -240,6 +292,7 @@ $(function() {
       }
       $grid.loadPage(page);
     });
+    $grid.loadPage(1);
   };
   
  
@@ -253,11 +306,19 @@ $(function() {
       return;
     }
     
+    var $gridContainer = $grid.closest(".gridContainer");
+    
+    var $pagerBar = $(".pager-bar", $gridContainer);
+    
     var totalRows = $grid.data().totalRows;
     var pageSize = $grid.data().pageSize;
     var rows = $grid.find("tr");
     
     var startNum = (page-1) * pageSize;
+    
+    var $pagerInput = $(".pager-input", $pagerBar);
+    
+    $($pagerInput).val( page);
     
     for(var i = 0; i < rows.length; i++) {
       $(rows[i]).hide();
@@ -284,7 +345,7 @@ $(function() {
         var $newTh = $("<th></th>").addClass("scroll").css({
                 padding:0,
                 margin:0,
-                width:15
+                width:"16px"
         });
         $gridHeader.find("tr:first").append($newTh);
     } 
@@ -302,15 +363,19 @@ $(function() {
       }
     });
     
+    
+    
     // Size the body row width to header row
     //console.log("Before resizing..");
     //console.log($gridBody.find("tr:first"));
-    $gridBody.find("td:visible").each(function(i) {
+    $gridBody.find("tr:first td:visible").each(function(i) {
       //console.log("--->Resizing : " + i);
        var w =$gridHeader.find("th").eq(i).width();
        $(this).width(w);
-       $(this).css({ width: w });
+       //$(this).css({ width: w + "px"});
     });
+    
+    
   };
 });
 
@@ -334,4 +399,16 @@ $(function() {
       showSearch: false
     }
   );
+  
+  /*
+   var grid = $( "#grid3" ).zenGrid({
+        source: cities.result,
+        columns: [
+                { property: "name", label: "Name" },
+                { property: "adminName1", label: "Area" },
+                { property: "adminName2", label: "Province" },
+                { property: "population", label: "Population" },
+                { property: "countryName", label: "Country" }
+        ]
+   });*/
 });

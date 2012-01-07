@@ -1,7 +1,10 @@
- 
+ menu, nav, section { display: block; }
+  
   .gridContainer{
-  font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; font-size: 1em;
+    position:relative;
+  font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; font-size: 0.9em;
     padding:0px;
+
     margin:0px;
   }
   

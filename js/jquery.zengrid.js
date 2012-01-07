@@ -1,8 +1,5 @@
-
-// Base: V0.1
-
 /*!
- * zengrid (jquery plugin) v0.2
+ * zengrid (jquery plugin) v0.3
  * http://tekacademy.com
  *
  * Copyright 2012, Rajesh Pillai
@@ -24,46 +21,18 @@ $(function() {
     });
   });
     
-  $.fn.search = function (inputVal)
-  {
-    
-      var table = $(this);
-   
-    if ($.trim(inputVal) === '') {
-        table.loadPage(1);
-        return;
-      }
-    
-      table.find('tr').each(function(index, row)
-      {
-          var allCells = $(row).find('td');
-          if(allCells.length > 0)
-          {
-              var found = false;
-              allCells.each(function(index, td)
-              {
-                  var regExp = new RegExp(inputVal, 'i');
-                  if(regExp.test($(td).text()))
-                  {
-                      found = true;
-                      return false;
-                  }
-              });
-              if(found === true)$(row).show();else $(row).hide();
-          }
-      });
-  };
-   
+  
   $.fn.zenGrid = function(options) {
     var settings = $.extend( {
       width : '100%',
       height : '100%',
       resizeColumns: true,
-      showSearch: true,
+      allowSearch: false,
+      allowDelete:true,
       pager: false,
       pagerLocation: "bottom",
       pageSize: 3,
-      showRowNo: false   // todo
+      showRowNumber: false   // todo
     }, options);
     
     
@@ -72,32 +41,11 @@ $(function() {
       
       var $grid = $(this);
       
-      $grid.addClass("grid");
-      
       if($grid.parents(".gridContainer").length) {
-          return $grid;
+        return $grid;
       }
-
-      // wrap the main grid
-      $grid.wrap("<div class='gridContainer'/>");
       
-      var $thead = $grid.find("thead").clone();
-      
-      // remove the header from the original grid
-      $("thead",$grid).remove();
-      
-      // prepend a gridHeader before the main table
-      $grid.closest(".gridContainer").prepend("<div class='gridHeader'/>");
-      
-      $(".gridHeader", $grid.closest(".gridContainer")).append("<table class='header'/>");
-      
-      // Add the thead to the grid header table
-      //$(".header").html($thead);
-      $grid.closest(".gridContainer").find(".header").html($thead);
-      
-      // wrap the main grid in its own container.
-      $grid.wrap("<div class='gridContent'/>");
-      
+      $grid.setup(); 
       
       // extend your new options with the saved ones
       if($grid.data().page) {
@@ -120,13 +68,11 @@ $(function() {
               });
       }
       
+      // setup columns
+      $grid.setupColumns(settings); 
       
-      // set container width
-      $grid.parent(".gridContainer").height($grid.data().height);
-      $grid.parent(".gridContent").height($grid.data().height);
-      
-      $grid.parent(".gridContainer").width($grid.data().width);
-      
+      // bind to source
+      $grid.bindSource(settings);
       
       // add column resizer
       $grid.addColResizer();
@@ -141,10 +87,108 @@ $(function() {
       
       $grid.addPager();
       
-      
     });
   };
 
+  $.fn.bindSource = function (settings)  {
+    var $grid = $(this);
+    var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
+    var $gridContainer = $grid.closest(".gridContainer");
+   
+    // json 
+    if(typeof settings.source ==='object')
+    {
+      var rows = [];
+      for(var i = 0; i < settings.source.length; i++){
+        var obj = settings.source[i];
+        for(var key in obj){
+            var attrName = key;
+            var attrValue = obj[key];
+           $grid.append($.toTr(obj));
+        }
+      }
+      
+      $gridHeader.find("th").each(function (i) {
+        var align = $(this).attr("align") || "left";
+          $grid.find("tr>(th|td):nth-child("+(i+1)+")")
+                 .css("text-align", align);
+        
+      });
+    }
+  };
+  
+  $.toTr = function (obj) {
+    var tr = "<tr>";
+    var tds = "";
+    for(var key in obj){
+        var attrName = key;
+        var attrValue = obj[key];
+      
+     
+        tds += "<td>" + attrValue + "</td>";
+    }
+    tr += tds;
+    tr +=  "</tr>"; 
+    return tr;
+  };
+  
+  // Runtime column settings
+  $.fn.setupColumns = function (settings) {
+    var $grid = $(this);
+    var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
+    var $gridContainer = $grid.closest(".gridContainer");
+   
+    if (settings.columns) {
+      $gridHeader.append("<thead><tr></tr></thead>>");
+      $.each(settings.columns, function (fieldName, val) {
+          //console.log("Field : " + fieldName + "=>" + val.property);
+        
+        var th = "<th ";
+        th += "data-col='" + val.property + "' ";
+        var align = val.align || "left";   
+        th += "data-align='" + align + "'";
+        th += ">";
+        th += val.label;
+        th += "</th>";
+        $gridHeader.find("thead tr").append(th);
+      });
+    }    
+  };
+  
+  $.fn.setup = function () {
+    var $grid = $(this);
+      
+    $grid.addClass("grid");
+    
+    
+  
+    // wrap the main grid
+    $grid.wrap("<div class='gridContainer'/>");
+    
+    var $thead = $grid.find("thead").clone();
+    
+    // remove the header from the original grid
+    $("thead",$grid).remove();
+    
+    // prepend a gridHeader before the main table
+    $grid.closest(".gridContainer").prepend("<div class='gridHeader'/>");
+    
+    $(".gridHeader", $grid.closest(".gridContainer")).append("<table class='header'/>");
+    
+    // Add the thead to the grid header table
+    //$(".header").html($thead);
+    $grid.closest(".gridContainer").find(".header").html($thead);
+    
+    // wrap the main grid in its own container.
+    $grid.wrap("<div class='gridContent'/>");
+    
+    // set container width
+    $grid.parent(".gridContainer").height($grid.data().height);
+    $grid.parent(".gridContent").height($grid.data().height);
+    
+    $grid.parent(".gridContainer").width($grid.data().width);
+  };
+  
   $.fn.addColResizer = function() {
       var $grid = $(this);
       var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
@@ -178,8 +222,6 @@ $(function() {
               });
           });
         }
-        // set the th to auto
-        //$th.width("auto");
         
         // add the resizer
         $th.append($colResizer);
@@ -192,15 +234,46 @@ $(function() {
       
   };
   
+  $.fn.search = function (inputVal)
+  {
+    
+    var table = $(this);
+   
+    if ($.trim(inputVal) === '') {
+        table.loadPage(1);
+        return;
+      }
+    
+      table.find('tr').each(function(index, row)
+      {
+          var allCells = $(row).find('td');
+          if(allCells.length > 0)
+          {
+              var found = false;
+              allCells.each(function(index, td)
+              {
+                  var regExp = new RegExp(inputVal, 'i');
+                  if(regExp.test($(td).text()))
+                  {
+                      found = true;
+                      return false;
+                  }
+              });
+              if(found === true)$(row).show();else $(row).hide();
+          }
+      });
+  };
+   
+  
   $.fn.addSearch = function() {
     
     var $grid = $(this);
     var $gridContainer = $grid.closest(".gridContainer");
 
-  
+ 
     // add search bar
-    if ($grid.data().showSearch) {
-      $gridContainer.children(":first").append("<div class='search-bar'>Search:<input type='text' class='search-input' /></div>");
+    if ($grid.data().allowSearch) {
+      $gridContainer.children(":first").prepend("<div class='search-bar'>Search:<input type='text' class='search-input' /></div>");
          $('input.search-input').keyup(function() {
              $grid.search($(this).val());
         });
@@ -212,13 +285,19 @@ $(function() {
     var $grid = $(this);
     var $gridContainer = $grid.closest(".gridContainer");
     
-    $gridContainer.prepend("<div class='title-bar'/>");
       
     var title = $grid.data().caption;
     
     if ($grid.attr("title")) {
           title = $grid.attr("title");
     }
+    
+    if ($.trim(title) === '' || title === 'undefined' || title === null) {
+        return;
+    }
+   
+    $gridContainer.prepend("<div class='title-bar'/>");
+   
     $(".title-bar", $gridContainer).append("<span>" + title + "</span>");
   };
   
@@ -338,10 +417,8 @@ $(function() {
     var $gridBody = $(this);
     
     // if there is a scrollbar account for it
-  
     if(($gridBody.height() > $gridBody.parents(".gridContent").height())) {
-        
-        $gridHeader.find(".scroll").remove();
+      $gridHeader.find(".scroll").remove();
         var $newTh = $("<th></th>").addClass("scroll").css({
                 padding:0,
                 margin:0,
@@ -354,7 +431,7 @@ $(function() {
         $(".scroll", $gridHeader).remove();
     }
     
-    // set header width based on user configuration in the html
+    // set header attributes based on user configuration in the html
     $gridHeader.find("th").each(function(i) {
       var $hd = $(this);
       var w = $hd.attr("data-width");
@@ -364,18 +441,25 @@ $(function() {
     });
     
     
-    
     // Size the body row width to header row
     //console.log("Before resizing..");
     //console.log($gridBody.find("tr:first"));
-    $gridBody.find("tr:first td:visible").each(function(i) {
-      //console.log("--->Resizing : " + i);
-       var w =$gridHeader.find("th").eq(i).width();
+    $gridBody.find("tr td:visible").each(function(i) {
+       var $th = $gridHeader.find("th").eq(i);
+       var w = $th.width();
        $(this).width(w);
-       //$(this).css({ width: w + "px"});
+       $(this).css({ width: w + "px"});
+       
+       
     });
     
-    
+    $gridHeader.find("th").each(function(i) {
+      var align = $(this).attr("data-align") || "left";
+      $gridBody.find("tr>(th|td):nth-child("+(i+1)+")")
+                 .css("text-align", align);
+      
+    });
+      
   };
 });
 
@@ -384,9 +468,11 @@ $(function() {
     {
       width: "300px",
       height: "120px",
-      caption: "Zen Grid",
+      caption: "Hello Zen Grid",
       pager: true,
-      pagerLocation: 'bottom'
+      pagerLocation: 'bottom',
+      allowAdd: true,
+      allowSearch:true
     }
   );
   
@@ -396,19 +482,33 @@ $(function() {
       height: "120px",
       caption: "Zen Grid",
       resizeColumns: true,
-      showSearch: false
+      allowSearch: false
     }
   );
   
-  /*
+  
    var grid = $( "#grid3" ).zenGrid({
         source: cities.result,
         columns: [
-                { property: "name", label: "Name" },
-                { property: "adminName1", label: "Area" },
-                { property: "adminName2", label: "Province" },
-                { property: "population", label: "Population" },
-                { property: "countryName", label: "Country" }
+          { property: "city", label: "City", align:'left' },
+          { property: "population", label: "Population", align:"right" },
+                { property: "country", label: "Country" }
         ]
-   });*/
+   });
 });
+
+var cities = {
+  result: [
+    {
+      "city": "Mumbai",
+      "population": 100000000,
+      "country" : "India"
+    },
+    {
+      "city": "Bangalore",
+      "population": 50000000,
+      "country" : "India"
+    }
+
+  ]
+};

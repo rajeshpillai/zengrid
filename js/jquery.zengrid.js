@@ -1,5 +1,8 @@
+
+// Base: V0.1
+
 /*!
- * zengrid (jquery plugin) v0.3
+ * zengrid (jquery plugin) v0.1
  * http://tekacademy.com
  *
  * Copyright 2012, Rajesh Pillai
@@ -8,9 +11,11 @@
  *
  * Date: Mon Jan 01 14:40 2012
  */
-
+// BASE VERSION: http://jsbin.com/rajesh-zengrid/latest/edit
 // AJAX TEST URL : http://jsbin.com/zengrid-data/js
 // jQuery UI CSS URL: http://jsbin.com/rajesh-css-aristoui/js
+
+// todo: Edit/save, smooth resizing of columns
 
 $(function() {
   var $debug = $("#debug");
@@ -35,8 +40,6 @@ $(function() {
       showRowNumber: false   // todo
     }, options);
     
-    
-    
     return this.each(function(){
       
       var $grid = $(this);
@@ -45,34 +48,27 @@ $(function() {
         return $grid;
       }
       
+      // if there are no saved options - use the default
+      $.each(settings,function(property,value) {
+              // if we have a callback function, we can't store it in data
+              // it will get executed right away
+              if(typeof(value) != "function") {
+                      $grid.data(property,value);
+              } else {
+                      // create pluginlett of custom callback
+                      $.fn[property] = value;
+                      //$.data($grid,property,true);
+                      $grid.data(property,true);
+              }
+      });
+      
       $grid.setup(); 
       
-      // extend your new options with the saved ones
-      if($grid.data().page) {
-              $.extend($grid.data(),options);
-
-      // if there are no saved options - use the default
-      } else {
-              $.each(settings,function(property,value) {
-                      // if we have a callback function, we can't store it in data
-                      // it will get executed right away
-                      if(typeof(value) != "function") {
-                              //$.data($grid,property,value);
-                              $grid.data(property,value);
-                      } else {
-                              // create pluginlett of custom callback
-                              $.fn[property] = value;
-                              //$.data($grid,property,true);
-                              $grid.data(property,true);
-                      }
-              });
-      }
+      // setup columns if dynamic
+      $grid.setupColumns(); 
       
-      // setup columns
-      $grid.setupColumns(settings); 
-      
-      // bind to source
-      $grid.bindSource(settings);
+      // bind to source, if source provided
+      $grid.bindSource();
       
       // add column resizer
       $grid.addColResizer();
@@ -86,26 +82,52 @@ $(function() {
       $grid.addSearch();
       
       $grid.addPager();
-      
+  
+      $grid.showRowNumber();  
     });
   };
 
-  $.fn.bindSource = function (settings)  {
+  $.fn.showRowNumber = function () {
+    var $grid = $(this);
+    var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
+    var $gridContainer = $grid.closest(".gridContainer");
+
+    if (!$grid.data().showRowNumber) {
+      return;
+    }
+    
+    $grid.find("tr").each(function (i) {
+       var row = i + 1;
+       $(this).prepend("<td class='grid-auto-no'>" + row + "</td>");
+    });
+    
+  };
+  
+  // called on grid, given a col attr it will return that TH
+  $.fn.getCol = function(col) {
+          return $(this).getHeaderRow().find("th[data-col="+col+"]");
+  };
+    
+  // called on a TH it will return all of the TDs in that column
+  $.fn.getTdsFromTh = function() {
+      var $grid = $(this).parents(".gridContainer").find(".grid");
+      return $grid.find("td[data-col="+$(this).attr("col")+"]");
+  };  
+
+
+  $.fn.bindSource = function ()  {
     var $grid = $(this);
     var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
     var $gridContainer = $grid.closest(".gridContainer");
    
     // json 
-    if(typeof settings.source ==='object')
+    if(typeof $grid.data().source ==='object')
     {
       var rows = [];
-      for(var i = 0; i < settings.source.length; i++){
-        var obj = settings.source[i];
-        for(var key in obj){
-            var attrName = key;
-            var attrValue = obj[key];
-           $grid.append($.toTr(obj));
-        }
+      for(var i = 0; i < $grid.data().source.length; i++){
+        var obj = $grid.data().source[i];
+        $grid.append($.toTr(obj)); 
+        
       }
       
       $gridHeader.find("th").each(function (i) {
@@ -114,6 +136,7 @@ $(function() {
                  .css("text-align", align);
         
       });
+      $grid.equalize();
     }
   };
   
@@ -123,26 +146,24 @@ $(function() {
     for(var key in obj){
         var attrName = key;
         var attrValue = obj[key];
-      
-     
-        tds += "<td>" + attrValue + "</td>";
+        //console.log(attrName);
+        tds += "<td data-col='" + attrName + "'>" + attrValue + "</td>"; 
     }
     tr += tds;
-    tr +=  "</tr>"; 
+    tr +=  "</tr>";  
     return tr;
   };
   
   // Runtime column settings
-  $.fn.setupColumns = function (settings) {
+  $.fn.setupColumns = function () {
     var $grid = $(this);
     var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
     var $gridContainer = $grid.closest(".gridContainer");
    
-    if (settings.columns) {
+    console.log("setting up columns...");
+    if ($grid.data().columns) {
       $gridHeader.append("<thead><tr></tr></thead>>");
-      $.each(settings.columns, function (fieldName, val) {
-          //console.log("Field : " + fieldName + "=>" + val.property);
-        
+      $.each($grid.data().columns, function (index, val) {
         var th = "<th ";
         th += "data-col='" + val.property + "' ";
         var align = val.align || "left";   
@@ -150,9 +171,16 @@ $(function() {
         th += ">";
         th += val.label;
         th += "</th>";
+        
         $gridHeader.find("thead tr").append(th);
       });
-    }    
+      
+    } 
+    if ($grid.data().showRowNumber) { 
+        console.log("row #..");
+        var rowTh = "<th class='grid-rowno'>#</th>";
+        $gridHeader.find("thead tr").prepend(rowTh);
+      }
   };
   
   $.fn.setup = function () {
@@ -160,8 +188,6 @@ $(function() {
       
     $grid.addClass("grid");
     
-    
-  
     // wrap the main grid
     $grid.wrap("<div class='gridContainer'/>");
     
@@ -183,10 +209,11 @@ $(function() {
     $grid.wrap("<div class='gridContent'/>");
     
     // set container width
-    $grid.parent(".gridContainer").height($grid.data().height);
-    $grid.parent(".gridContent").height($grid.data().height);
+    $grid.closest(".gridContainer").height($grid.data().height);
+    $grid.closest(".gridContent").height($grid.data().height);
     
-    $grid.parent(".gridContainer").width($grid.data().width);
+    $grid.closest(".gridContainer").width($grid.data().width);
+    
   };
   
   $.fn.addColResizer = function() {
@@ -208,12 +235,24 @@ $(function() {
           $colHandle.mousedown(function(e) {
               var startX = e.clientX;
               $(document).bind("mousemove.zengrid", function(e) {
+                var $div = $th.find(".col-resizer");
                 
-                var newWidth = $th.width() + (e.clientX - startX);
-                $th.width(newWidth); 
-                $th.css ({ "width" : newWidth});
+                //var newWidth = $th.width() + (e.clientX - startX);
+                var newWidth = $div.width() + (e.clientX - startX);
+                
+                console.log("New width: " + newWidth);
+                
+                //$th.width(newWidth); 
+                $div.width(newWidth);
+                
+                var currentIndex = $th.prevAll().length;
+                console.log("Current Index: " + currentIndex);
+                // set the width of the td
+                $grid.find("tr:first td").eq(currentIndex).width(newWidth);
+                
                 $grid.equalize();
                 startX = e.clientX;
+                $th.width(newWidth);
                 
               
               });
@@ -223,6 +262,8 @@ $(function() {
           });
         }
         
+        // now set the th to auto
+        $th.width("auto");
         // add the resizer
         $th.append($colResizer);
         
@@ -307,6 +348,9 @@ $(function() {
  
     var $gridContainer = $grid.closest(".gridContainer");
     
+    var $pager = $grid.getPager(); // todo
+
+    
     if (!$grid.data().pager) {
         return;
     }
@@ -345,8 +389,8 @@ $(function() {
       }
      });
     
-    
-    $("a.prev", $gridContainer).click(function(e) {
+   
+    $($gridContainer).delegate("a.prev", "click",function(e) {
       var page = $grid.data("page");
       
       if (page !== 'undefined' && page > 1) {
@@ -359,7 +403,7 @@ $(function() {
       $grid.loadPage(page);
     });
     
-    $("a.next", $gridContainer).click(function(e) {
+    $($gridContainer).delegate("a.next", "click",function(e) {
       var page = $grid.data("page");
       var totalPages = $grid.data().totalPages;
       if (page !== undefined && page < totalPages) {
@@ -374,7 +418,11 @@ $(function() {
     $grid.loadPage(1);
   };
   
- 
+  $.fn.getPager = function(){
+    return $(this).parents(".gridContainer").find(".pager-bar");
+  };
+  
+  
   $.fn.loadPage = function(page) {
     
     var $grid = $(this);
@@ -397,11 +445,12 @@ $(function() {
     
     var $pagerInput = $(".pager-input", $pagerBar);
     
-    $($pagerInput).val( page);
+    $pagerInput.val( page);
     
-    for(var i = 0; i < rows.length; i++) {
+    rows.hide();
+    /*for(var i = 0; i < rows.length; i++) {
       $(rows[i]).hide();
-    }
+    }*/
     
     for(var j = startNum; j < startNum + pageSize; j++){
        $(rows[j]).show();
@@ -442,8 +491,6 @@ $(function() {
     
     
     // Size the body row width to header row
-    //console.log("Before resizing..");
-    //console.log($gridBody.find("tr:first"));
     $gridBody.find("tr td:visible").each(function(i) {
        var $th = $gridHeader.find("th").eq(i);
        var w = $th.width();
@@ -452,6 +499,17 @@ $(function() {
        
        
     });
+    
+   // size the first row to the headers
+    $gridBody.find("tr:visible:first td:visible").each(function(i) {
+      var $colResizer = $gridHeader.find(".col-resizer").eq(i);
+      //var pLeft = parseInt($colResizer.parents("th").css("padding-left"));
+      //var pRight = parseInt($colResizer.parents("th").css("padding-left"));
+  
+      $colResizer.width($(this).width());
+     
+    });
+
     
     $gridHeader.find("th").each(function(i) {
       var align = $(this).attr("data-align") || "left";
@@ -466,32 +524,34 @@ $(function() {
 $(function() {
   $(".grid1").zenGrid(
     {
-      width: "300px",
-      height: "120px",
+      width: "600px",
       caption: "Hello Zen Grid",
       pager: true,
       pagerLocation: 'bottom',
-      allowAdd: true,
-      allowSearch:true
+      allowSearch:true,
+      showRowNumber:true
     }
   );
   
    $(".grid2").zenGrid(
     {
-      width: "300px",
+      width: "600px",
       height: "120px",
       caption: "Zen Grid",
       resizeColumns: true,
       allowSearch: false
+      
     }
   );
   
   
    var grid = $( "#grid3" ).zenGrid({
+     width: "600px",
+     showRowNumber: true,
         source: cities.result,
         columns: [
-          { property: "city", label: "City", align:'left' },
-          { property: "population", label: "Population", align:"right" },
+          { property: "city", label: "City", align:'left', editable: 'text' },
+          { property: "population", label: "Population", editable:'text', align:"right" },
                 { property: "country", label: "Country" }
         ]
    });

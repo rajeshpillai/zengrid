@@ -1,11 +1,10 @@
- menu, nav, section { display: block; }
-  
   .gridContainer{
     position:relative;
   font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; font-size: 0.9em;
     padding:0px;
 
     margin:0px;
+    
   }
   
   .gridHeader  {
@@ -122,7 +121,7 @@ background-image: -webkit-gradient(
     position:relative;
     height:inherit;
     background:transparent;
-    width:100%;
+    /*width:100%;*/
 }
 /* the handle on each th that will grab to resize */
 .col-handle {

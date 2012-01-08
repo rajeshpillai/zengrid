@@ -1,4 +1,4 @@
-  .gridContainer{
+.gridContainer{
     position:relative;
   font-family: Lucida Grande, Lucida Sans, Arial, sans-serif; font-size: 0.9em;
     padding:0px;
@@ -193,3 +193,4 @@ background-image: -webkit-gradient(
     text-decoration:none;
     background:#b8b6f2;
   }
+  

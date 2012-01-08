@@ -84,9 +84,43 @@ $(function() {
       $grid.addPager();
   
       $grid.showRowNumber();  
+      
+      $grid.allowSorting();
     });
   };
 
+  $.fn.allowSorting = function () {
+    var $grid = $(this);
+    var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
+    var $gridContainer = $grid.closest(".gridContainer");
+
+    $gridHeader.find("th").each(function(column) {
+       var $th = $(this);
+       $th.click(function (e) {
+         var $rows = $grid.find('tbody tr').get();
+         var sortDirection = $th.is('.sorted-asc') ? -1 : 1;
+
+         $rows.sort(function (a, b) {
+            var keyA = $(a).children('td').eq(column).text().toUpperCase();
+            var keyB = $(b).children('td').eq(column).text().toUpperCase();
+   
+            if (keyA < keyB) return -sortDirection;
+    
+            if (keyA > keyB) return sortDirection;
+    
+            return 0;
+          });
+          //identify the column sort order  
+          $th.removeClass('sorted-asc sorted-desc');
+          var $sortHead = $th.filter(':nth-child(' + (column + 1) + ')');
+          sortDirection == 1 ? $sortHead.addClass('sorted-asc') : $sortHead.addClass('sorted-desc');
+          $grid.append($rows);
+       });
+       
+    });
+
+  };
+  
   $.fn.showRowNumber = function () {
     var $grid = $(this);
     var $gridHeader = $grid.closest(".gridContainer").find(".header"); 

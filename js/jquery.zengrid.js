@@ -373,7 +373,7 @@
             else {
               $grid.data("page", 1);
             }
-            this.loadPage(page);
+            me.loadPage(page);
           });
           
           $($gridContainer).delegate("a.next", "click",function(e) {

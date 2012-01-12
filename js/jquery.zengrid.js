@@ -130,6 +130,7 @@
     
     _buildData: function(settings) {
       var $this = $(this.element);
+      console.log(settings);
        $.each(settings,function(property,value) {
           // if we have a callback function, we can't store it in data
           // it will get executed right away
@@ -186,7 +187,7 @@
      
       //alert(typeof $grid.data().source);
       // json 
-      if(typeof $grid.data().source ==='object')
+      /*if(typeof $grid.data().source ==='object')
       {
       
         var rows = [];
@@ -203,7 +204,24 @@
           
         });
         this.equalize();
+      }*/
+      
+       if (typeof $grid.data().source === 'object') {
+          var rows = [];
+          for(var i = 0; i < $grid.data().source.length; i++){
+            var obj = $grid.data().source[i];
+            $grid.append(this.toTr(obj)); 
+          }
+         
+        
+        $gridHeader.find("th").each(function (i) {
+          var align = $(this).attr("align") || "left";
+            $grid.find("tr>(th|td):nth-child("+(i+1)+")")
+                   .css("text-align", align);
+          
+        });
       }
+      
     },
     // end bindSource
     
@@ -213,6 +231,7 @@
         var $gridHeader = $grid.closest(".gridContainer").find(".header"); 
         var $gridContainer = $grid.closest(".gridContainer");
        
+        /*
         if ($grid.data().columns) {
           $gridHeader.append("<thead><tr></tr></thead>>");
           $.each($grid.data().columns, function (index, val) {
@@ -228,7 +247,26 @@
           });
           
         } 
-        if ($grid.data().showRowNumber) { 
+        */
+
+        if (typeof $grid.data().fields === 'object') {
+          $gridHeader.append("<thead><tr></tr></thead>>");
+          $.each($grid.data().fields, function (f,v) {
+            var th = "<th ";
+            th += "data-col'" + f + "' ";
+            
+            var align = v.align || "left";
+            th += "data-align='" + align + "'";
+            th += ">";
+            th += v.label;
+            th += "</th>";
+            
+            $gridHeader.find("thead tr").append(th);
+           
+          });
+        }
+        
+      if ($grid.data().showRowNumber) { 
             var rowTh = "<th class='grid-rowno'>#</th>";
             $gridHeader.find("thead tr").prepend(rowTh);
           }
@@ -352,7 +390,8 @@
             $pagerBar.append("<span class='pager-status'>Page 1 of 3</span>");
             
           }
-          $(".pager-status", $pagerBar).html("Page <input type='text' value='1' class='pager-input'/> of " + Math.ceil($grid.data().totalPages));
+          $(".pager-status", $pagerBar)
+            .html("Page <input type='text' value='1' class='pager-input'/> of " + Math.ceil($grid.data().totalPages));
           
           var $pagerInput = $(".pager-input", $pagerBar);
           $pagerInput.keypress(function(e) {
@@ -570,12 +609,30 @@ $(function() {
    var grid = $( "#grid3" ).zenGrid({
      width: "600px",
      showRowNumber: true,
-        source: cities.result,
-        columns: [
-          { property: "city", label: "City", align:'left', editable: 'text' },
-          { property: "population", label: "Population", editable:'text', align:"right" },
-                { property: "country", label: "Country" }
-        ]
+      source: cities.result,
+      columns: [
+        { property: "city", label: "City", align:'left', editable: 'text' },
+        { property: "population", label: "Population", editable:'text', align:"right" },
+              { property: "country", label: "Country" }
+      ],
+      fields: {
+        city: {
+            label: "City",
+            align: "left",
+            editable: "text"
+        },
+        population: {
+          label: "Population",
+          align: "right",
+          editable: "text"
+        },
+        country: {
+          label: "Country"
+          
+        }
+    
+      }
+     
    });
 });
 
